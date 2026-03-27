@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width", initial-scale="1.0">
+    <title>weather classifier</title>
+    <link rel="stylesheet" href="">
+</head>
+
+<body>
+
+    <div  class="containter">
+        <h1> Upload an image to predict the weather type!</h1>
+
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" id="image" accept="image/*"/>
+            <button type="submit">predict!</button>
+        </form>
+
+        <div id="drop-zone">
+            <p>or drag & drop an image :D</p>
+        </div>
+
+        <div id="preview"></div>
+        <div id="result"></div>
+    </div>
+
+</body>
+    
+</html>
