@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -35,12 +35,15 @@ transform = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
 ])
 
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):  
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
     img = Image.open(io.BytesIO(contents)).convert("RGB")
-    img_tensor = transform(img).squeeze(0).to(device)
+    img_tensor = transform(img).unsqueeze(0).to(device)
 
     with torch.no_grad():
         outputs = model(img_tensor)
@@ -49,4 +52,4 @@ async def predict(file: UploadFile = File(...)):
     pred_label = class_names[pred_idx.item()]
     confidence = torch.nn.functional.softmax(outputs, dim=1)[0][pred_idx.item()].item()
 
-    return {"prediction":pred_label, confidence:round(confidence, 4)}
+    return {"prediction": pred_label, "confidence": round(confidence, 4)}

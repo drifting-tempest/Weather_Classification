@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width", initial-scale="1.0">
     <title>weather classifier</title>
-    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="static\style.css">
 </head>
 
 <body>
 
-    <div  class="containter">
-        <h1> Upload an image to predict the weather type!</h1>
+    <div  class="container">
+        <h1> upload an image to predict the weather type!</h1>
 
         <form id="upload-form" enctype="multipart/form-data">
             <input type="file" id="image" accept="image/*"/>
@@ -24,7 +24,111 @@
 
         <div id="preview"></div>
         <div id="result"></div>
+
+        <footer class="footer">made with love, sakura</footer>
+
     </div>
+
+<script>
+
+    //i LOVE saying i can do javascript but i HATe saying that i LOVE javascriptt
+
+    const form = document.getElementById("upload-form");
+    const fileInput = document.getElementById("image");
+    const result = document.getElementById("result");
+    const dropZone = document.getElementById("drop-zone");
+    const preview = document.getElementById("preview");
+
+    let currentFile = null;
+
+    function setFile(file) {
+        currentFile = file;
+
+        preview.innerHTML = "";
+        const img = document.createElement("img");
+        img.className = "preview-image";
+        img.src = URL.createObjectURL(file);
+        img.onload = () => URL.revokeObjectURL(img.src);  
+        preview.appendChild(img);
+    }
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const file = currentFile || fileInput.files[0];
+
+        if (!file) {
+            result.innerHTML = "Upload an image!";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        result.innerHTML = "Predicting...";
+
+        try {
+            const res = await fetch("/predict/", {
+                method: "POST",
+                body: formData,
+            });
+            const data = await res.json();
+
+            result.innerHTML = `
+                <p class="prediction">
+                    Prediction: <strong>${data.prediction}</strong>
+                </p>
+                <p class="confidence">
+                    Confidence: ${(data.confidence * 100).toFixed(2)}%
+                </p>
+            `;
+        } catch (err) {
+            result.innerHTML = `<p>Error: ${err.message}</p>`;
+        }
+    });
+
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.add("highlight");
+        });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.remove("highlight");
+        });
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
+
+        if (!file.type.startsWith("image/")) {
+            result.innerHTML = "Please drop an image file.";
+            return;
+        }
+
+        setFile(file);
+        result.innerHTML = "";
+    });
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files && fileInput.files[0]) {
+            setFile(fileInput.files[0]);
+            result.innerHTML = "";
+        }
+    });
+
+</script>
 
 </body>
     
